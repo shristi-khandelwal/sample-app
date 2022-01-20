@@ -1,6 +1,6 @@
 server:
   additionalApplications:
-    - name: test
+    - name: sample-app
       project: default
       source:
         repoURL: "https://github.com/shristi-khandelwal/test.git"
