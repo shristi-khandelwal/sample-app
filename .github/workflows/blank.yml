@@ -17,6 +17,8 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
         if: startsWith(github.ref, 'refs/heads/release-')
+        with:
+          repository: 'shristi-khandelwal/test'
           
       - name: Extract branch name
         if: startsWith(github.ref, 'refs/heads/release-')
@@ -91,4 +93,4 @@ jobs:
         with:
           token: ${{secrets.PAT}}
           branch: test-${{ steps.extract_branch.outputs.branch }}
-          title: "PR from github actions"
+          title: "Test PR from github actions - shristi-khandelwal/sample-app"
