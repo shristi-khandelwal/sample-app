@@ -1,0 +1,94 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the workflow will run
+on: create
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+        if: startsWith(github.ref, 'refs/heads/release-')
+          
+      - name: Extract branch name
+        if: startsWith(github.ref, 'refs/heads/release-')
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        id: extract_branch
+      
+      - name: variable-mapper
+        if: startsWith(github.ref, 'refs/heads/release-')
+        uses: kanga333/variable-mapper@v0.2.2
+        with:
+          key: "${{ steps.extract_branch.outputs.branch }}"
+          map: |
+            {
+              "master": {
+                "environment": "production",
+                "values_file": "test-master.yaml"
+              },
+              "development": {
+                "environment": "development",
+                "values_file": "values-sandbox.yaml"
+              },
+              "release": {
+                "environment": "uat",
+                "values_file": "test.yaml"
+              }
+            }
+          export_to: env,log,output
+          
+      - name: Echo environment and output
+        if: startsWith(github.ref, 'refs/heads/release-')
+        run: |
+          echo ${{ env.environment }}
+          echo values_file ${{ env.values_file }}      
+          
+            
+      - name: Setup YQ
+        if: startsWith(github.ref, 'refs/heads/release-')
+        uses: chrisdickinson/setup-yq@latest
+        
+      - name: Check if yq installed
+        if: startsWith(github.ref, 'refs/heads/release-')
+        run: |
+          pwd
+          ls -al
+          
+      - name: Print yaml
+        if: startsWith(github.ref, 'refs/heads/release-')
+        run: |
+          cat ${{ env.values_file }}
+          cat test-master.yaml
+          
+      - name: YQ by mikefarah as github action
+        if: startsWith(github.ref, 'refs/heads/release-')
+      # You may pin to the exact commit or the version.
+      # uses: tomasdedic/yq-action@aab1899c3474e237113515eebf86c11d6d3670df
+        uses: tomasdedic/yq-action@1.4
+        with:
+          command: |
+            yq e '(.server.additionalApplications[]|select(.name == "${{ github.event.repository.name }}").source.targetRevision) |= "${{ steps.extract_branch.outputs.branch }}"' -i ${{ env.values_file }}
+            yq e '(.server.additionalApplications[]|select(.name == "${{ github.event.repository.name }}").source.targetRevision) |= "${{ steps.extract_branch.outputs.branch }}"' -i test-master.yaml
+
+      - name: Print yaml
+        if: startsWith(github.ref, 'refs/heads/release-')
+        run: |
+          cat ${{ env.values_file }}
+          cat test-master.yaml
+          
+      - name: Create Pull Request
+        if: startsWith(github.ref, 'refs/heads/release-')
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{secrets.PAT}}
+          branch: test-${{ steps.extract_branch.outputs.branch }}
+          title: "PR from github actions"
