@@ -19,6 +19,7 @@ jobs:
         if: startsWith(github.ref, 'refs/heads/release-')
         with:
           repository: 'shristi-khandelwal/test'
+          token: ${{ secrets.PAT }}
           
       - name: Extract branch name
         if: startsWith(github.ref, 'refs/heads/release-')
