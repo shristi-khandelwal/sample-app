@@ -16,19 +16,13 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-        if: startsWith(github.ref, 'refs/heads/release-')
-        with:
-          repository: 'shristi-khandelwal/test'
-          token: ${{ secrets.PAT }}
           
       - name: Extract branch name
-        if: startsWith(github.ref, 'refs/heads/release-')
         shell: bash
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
         id: extract_branch
       
       - name: variable-mapper
-        if: startsWith(github.ref, 'refs/heads/release-')
         uses: kanga333/variable-mapper@v0.2.2
         with:
           key: "${{ steps.extract_branch.outputs.branch }}"
@@ -57,23 +51,19 @@ jobs:
           
             
       - name: Setup YQ
-        if: startsWith(github.ref, 'refs/heads/release-')
         uses: chrisdickinson/setup-yq@latest
         
       - name: Check if yq installed
-        if: startsWith(github.ref, 'refs/heads/release-')
         run: |
           pwd
           ls -al
           
       - name: Print yaml
-        if: startsWith(github.ref, 'refs/heads/release-')
         run: |
           cat ${{ env.values_file }}
           cat test-master.yaml
           
       - name: YQ by mikefarah as github action
-        if: startsWith(github.ref, 'refs/heads/release-')
       # You may pin to the exact commit or the version.
       # uses: tomasdedic/yq-action@aab1899c3474e237113515eebf86c11d6d3670df
         uses: tomasdedic/yq-action@1.4
@@ -85,7 +75,6 @@ jobs:
             yq e '(.server.additionalApplications[]|select(.name == "${{ github.event.repository.name }}").source.targetRevision) |= "${{ steps.extract_branch.outputs.branch }}"' -i ${{ env.values_file }}
           
       - name: YQ by mikefarah as github action
-        if: startsWith(github.ref, 'refs/heads/release-')
       # You may pin to the exact commit or the version.
       # uses: tomasdedic/yq-action@aab1899c3474e237113515eebf86c11d6d3670df
         uses: tomasdedic/yq-action@1.4
@@ -95,13 +84,11 @@ jobs:
             yq e '(.server.additionalApplications[]|select(.name == "${{ github.event.repository.name }}").source.targetRevision) |= "${{ steps.extract_branch.outputs.branch }}"' -i test-master.yaml
 
       - name: Print yaml
-        if: startsWith(github.ref, 'refs/heads/release-')
         run: |
           cat ${{ env.values_file }}
           cat test-master.yaml
           
       - name: Create Pull Request
-        if: startsWith(github.ref, 'refs/heads/release-')
         uses: peter-evans/create-pull-request@v3
         with:
           token: ${{secrets.PAT}}
