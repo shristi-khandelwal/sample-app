@@ -3,14 +3,29 @@
 name: CI
 
 # Controls when the workflow will run
-on: create
+on:
+  pull_request:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      go:  ${{ steps.changes.outputs.go }}
+    steps:
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            go:
+              - 'test/test.yaml'
+
   # This workflow contains a single job called "build"
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    needs: check-changes
+    if: ${{ needs. check-changes.outputs.go == 'true' }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
